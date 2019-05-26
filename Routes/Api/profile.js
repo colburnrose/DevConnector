@@ -4,9 +4,7 @@ const Profile = require('../../Models/Profile');
 const User = require('../../Models/User');
 const auth = require('../../Middleware/auth');
 const {check,validationResult} = require('express-validator/check');
-const mongoose = require('mongoose');
 
-mongoose.set('useFindAndModify', false);
 
 
 // @route   GET: api/profile/me endpoint
@@ -67,7 +65,7 @@ router.post('/', [auth, [check('status', 'Status is required.').not().isEmpty(),
 
         if(user) {
             // Update
-            user = await Profile.findOneAndUpdate({user: req.user.id }, {$set: profile }, {new: true, useFindAndModify: false});
+            user = await Profile.findOneAndUpdate({user: req.user.id }, {$set: profile }, {new: true});
             return res.json({user});
         }
 
@@ -81,4 +79,36 @@ router.post('/', [auth, [check('status', 'Status is required.').not().isEmpty(),
         res.status(500).send('Server Error');
     }
 });
+
+// @route   GET: api/profile
+// @des     Get all profiles
+// @access  Public
+router.get('/', async (req, res) => {
+    try {
+        const profiles = await Profile.find().populate('user', ['name', 'avatar']);
+        res.json(profiles);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET: api/profile/user/:user_id
+// @des     Get profile by userid
+// @access  Public
+router.get('/user/:user_id', async (req, res) => {
+    try {
+        const profile = await Profile.findById({user: req.params.user_id}).populate('user', ['name', 'avatar']);
+        if(!profile)return res.status(400).json({msg: 'Profile not found.'});
+
+        res.json(profile);
+    } catch (err) {
+        console.error(err.message);
+        if(err.kind == 'ObjectId'){
+            res.status(400).json({msg: 'Profile not found.'});
+        }
+        res.status(500).send('Server Error');
+    }
+});
+
 module.exports = router;
