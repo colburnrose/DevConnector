@@ -4,6 +4,7 @@ const Profile = require('../../Models/Profile');
 const User = require('../../Models/User');
 const auth = require('../../Middleware/auth');
 const {check,validationResult} = require('express-validator/check');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 
 
@@ -142,7 +143,7 @@ check('company', 'Company is required').not().isEmpty(), check('from', 'From dat
 
     const {title, company, location, from, to, current, description} = req.body;
     const newExp = {title, company, location, from, to, current, description}
-    
+
     try {
         const profile = await Profile.findOne({user: req.user.id}); //fetch the profile
         profile.experience.unshift(newExp); // push experience to the beginning
@@ -154,5 +155,28 @@ check('company', 'Company is required').not().isEmpty(), check('from', 'From dat
         res.status(500).send('Server error');
     }
 });
+
+
+// @route   DELETE: api/profile/experience/:exp_id
+// @des     Delete profile experience
+// @access  Private
+router.delete('/experience/:exp_id', auth, async (req,res) => {
+    try {
+        const profile = await Profile.findById({ user: req.user.id }); // fetch profile by userid
+
+        // Get remove index
+        const removeIndex = profile.experience.map(item => item.id).indexOf(req.params.exp_id);
+        if(removeIndex === -1) return res.status(400).json({msg: 'No such entity.'});
+
+        profile.experience.splice(removeIndex, 1); // take out one.
+
+        await profile.save();
+        res.json(profile);
+    } catch (err) {
+        console.error(err.message);
+      res.status(500).send ('Server error.');
+    }
+});
+
 
 module.exports = router;
