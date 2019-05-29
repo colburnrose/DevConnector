@@ -194,15 +194,35 @@ check('fieldOfStudy', 'Field of study is required.').not().isEmpty(), check('fro
     const newEducation = {school, degree, fieldOfStudy, description, from, to, current};
 
     try {
-        const profile = await Profile.findOne({user: req.user.id}); //fetch the profile
-        profile.education.unshift(newEducation); // push education to the beginning
-        await profile.save();
-
-        res.json(profile);
+        const profile = await Profile.findOne({user: req.user.id});
+        
+        profile.education.unshift(newEducation)
+        await profile.save().then(profile => res.json(profile));
+        
     } catch (error) {
         console.error(error.message);
         res.status(500).send('Server error');
     }
 });
 
+// @route   DELETE: api/profile/education/:edu_id
+// @des     Delete profile education
+// @access  Private
+router.delete('/education/:edu_id', auth, async (req,res) => {
+    try {
+        const profile = await Profile.findById({ user: req.user.id }); // fetch profile by userid
+
+        // Get remove index
+        const removeIndex = profile.education.map(item => item.id).indexOf(req.params.edu_id);
+        if(removeIndex === -1) return res.status(400).json({msg: 'No such entity.'});
+
+        profile.education.splice(removeIndex, 1); // take out one.
+
+        await profile.save();
+        res.json(profile);
+    } catch (err) {
+        console.error(err.message);
+      res.status(500).send ('Server error.');
+    }
+});
 module.exports = router;
