@@ -196,9 +196,9 @@ check('fieldOfStudy', 'Field of study is required.').not().isEmpty(), check('fro
     try {
         const profile = await Profile.findOne({user: req.user.id});
         
-        profile.education.unshift(newEducation)
+        profile.education.unshift(newEducation); // push to the front.
         await profile.save().then(profile => res.json(profile));
-        
+
     } catch (error) {
         console.error(error.message);
         res.status(500).send('Server error');

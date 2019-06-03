@@ -65,11 +65,7 @@ router.post('/', [
         await user.save(); // Save User to DB.
 
         // Return user payload & jsonwebtoken
-        const payload = {
-            user: {
-                id: user.id
-            }
-        }
+        const payload = {id: user.id}
 
         // Here we sign the token: pass in the payload, the secret, and expiration (optional).
         // Call back we either get the error or the token.
